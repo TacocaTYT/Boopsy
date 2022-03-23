@@ -1,5 +1,6 @@
 import disnake
 from disnake.ext import commands
+from token import token
 import logging
 gameIDdict = {
   "scrabble" : 1,
@@ -115,4 +116,4 @@ async def on_message(message):
   except IndexError:
     print("Index out of range, probably empty still")
 
-client.run("ODg1MzExMzg2MjA3NTI2OTMy.YTlMeg.a0lXA55qTmiUoWjyiheJ0FqOKiI")
+client.run(token)
