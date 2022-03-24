@@ -59,11 +59,11 @@ async def startGame(ctx, gameID: int = 1):
   client.leadWordPoints[ctx.channel.id] = 0
   client.channelGame[ctx.channel.id] = gameID
   client.leadPlayer[ctx.channel.id] = "<@885311386207526932>"
-  print(client.channelGame)
   embedVar = disnake.Embed(title=f"The game has begun!", description="", color=0x00ff00)
   embedVar.add_field(name="Score to Beat:", value=client.leadWord[ctx.channel.id] + " worth " + str(client.leadWordPoints[ctx.channel.id]) + " points from " + str(client.leadPlayer[ctx.channel.id]), inline=False)
   embedVar.add_field(name="Next Player: ", value=f"<@{client.players[ctx.channel.id][0]}>", inline=False)
-  client.currentEmbed[ctx.channel.id] = await ctx.send(embed=embedVar)
+  await ctx.send(embed=embedVar)
+  client.currentEmbed[ctx.channel.id] = await ctx.original_message()
   client.currentGameChannel = ctx.channel.id
 
 
@@ -88,7 +88,6 @@ async def joinGame(ctx):
   else:
     await ctx.send(f'<@{ctx.author.id}> has joined the round!')
     client.players[ctx.channel.id].append(ctx.author.id)
-    print(client.players)
 
 
 @client.listen()
@@ -105,8 +104,7 @@ async def on_message(message):
                   client.points += pointDict[key]
                   client.remainingCharacters -= 1
           await message.delete()
-          await message.channel.send(message.content + " is worth " + str(client.points) + " points")
-          print(client.currentEmbed)
+          #await message.channel.send(message.content + " is worth " + str(client.points) + " points")
           if client.points > client.leadWordPoints[message.channel.id]:
             embedVar = disnake.Embed(title=f"{message.author}'s turn!", description=f"{message.author}'s word was {message.content}, worth {client.points} points", color=0x00ff00)
             embedVar.add_field(name="Score to Beat:", value=client.leadWord[message.channel.id] + " worth " + str(client.leadWordPoints[message.channel.id]) + " points from " + str(client.leadPlayer[message.channel.id]), inline=False)
