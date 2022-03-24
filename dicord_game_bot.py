@@ -1,9 +1,11 @@
 import disnake
 from disnake.ext import commands
 from my_token import my_token
+from random_word import RandomWords
+rw = RandomWords()
 import logging
 gameIDdict = {
-  "scrabble" : 1,
+  "shitty scrabble" : 1,
   "hangman" : 2
 }
 pointDict = {
@@ -55,13 +57,22 @@ async def on_ready():
   description="Start a game from the list."
 )
 async def startGame(ctx, gameID: int = 1):
-  client.leadWord[ctx.channel.id] = ""
-  client.leadWordPoints[ctx.channel.id] = 0
   client.channelGame[ctx.channel.id] = gameID
-  client.leadPlayer[ctx.channel.id] = "<@885311386207526932>"
-  embedVar = disnake.Embed(title=f"The game has begun!", description="", color=0x00ff00)
-  embedVar.add_field(name="Score to Beat:", value=client.leadWord[ctx.channel.id] + " worth " + str(client.leadWordPoints[ctx.channel.id]) + " points from " + str(client.leadPlayer[ctx.channel.id]), inline=False)
-  embedVar.add_field(name="Next Player: ", value=f"<@{client.players[ctx.channel.id][0]}>", inline=False)
+  if gameID == 1:
+    client.leadWord[ctx.channel.id] = ""
+    client.leadWordPoints[ctx.channel.id] = 0
+    client.leadPlayer[ctx.channel.id] = "<@885311386207526932>"
+    embedVar = disnake.Embed(title=f"The game has begun!", description="", color=0x00ff00)
+    embedVar.add_field(name="Score to Beat:", value=client.leadWord[ctx.channel.id] + " worth " + str(client.leadWordPoints[ctx.channel.id]) + " points from " + str(client.leadPlayer[ctx.channel.id]), inline=False)
+    embedVar.add_field(name="Next Player: ", value=f"<@{client.players[ctx.channel.id][0]}>", inline=False)
+  
+  elif gameID == 2:
+    client.leadWord[ctx.channel.id] = rw.get_random_word(minLength=5)
+    for i in client.leadWord[ctx.channel.id]:
+      client.leadWordPoints[ctx.message.id].append("_")
+    embedVar = disnake.Embed(title=f"Hangman", description=f"{client.leadWordPoints[ctx.message.id]}", color=0x00ff00)
+
+  
   await ctx.send(embed=embedVar)
   client.currentEmbed[ctx.channel.id] = await ctx.original_message()
   client.currentGameChannel = ctx.channel.id
@@ -93,7 +104,7 @@ async def joinGame(ctx):
 @client.listen()
 async def on_message(message):
   try:
-    if message.channel.id in client.channelGame.keys():
+    if client.channelGame[message.channel.id] == 1:
       if message.author != client.user and message.author.id == client.players[message.channel.id][0]:
         if len(message.content) <= 45 and " " not in message.content:
           client.remainingCharacters = len(message.content)
@@ -121,6 +132,9 @@ async def on_message(message):
             embedVar.add_field(name="Next Player: ", value=f'<@{client.players[message.channel.id][0]}>', inline=False)
             await client.currentEmbed[message.channel.id].edit(embed=embedVar)
           client.points = 0
+    if client.channelGame[message.channel.id] == 2:
+      if message.author != client.user and message.author.id == client.players[message.channel.id][0]:
+        pass
   except IndexError:
     print("Index out of range, probably empty still")
 
