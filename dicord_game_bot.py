@@ -69,6 +69,7 @@ async def startGame(ctx, gameID: int = 2):
   
   elif gameID == 2:
     client.leadWord[ctx.channel.id] = str(rw.get_random_word(minLength=5)).lower()
+    print(client.leadWord[ctx.channel.id])
     client.leadWordPoints[ctx.channel.id] = ""
     client.guessedLetters[ctx.channel.id] = []
     for i in client.leadWord[ctx.channel.id]:
@@ -151,16 +152,23 @@ async def on_message(message):
           client.channelGame[message.channel.id] = 0
         elif len(str(message.content)) == 1 and str(message.content).isalpha() and str(message.content) not in client.guessedLetters[message.channel.id]:
           client.leadWordPoints[message.channel.id] = ""
-          client.guessedLetters[message.channel.id] += str(message.content)
+          client.guessedLetters[message.channel.id] += str(message.content).lower()
           for i in client.leadWord[message.channel.id]:
             if i in client.guessedLetters[message.channel.id]:
               client.leadWordPoints[message.channel.id] += f"{i}"
             else:
               client.leadWordPoints[message.channel.id] += "[]"
-          client.players[message.channel.id].insert(len(client.players[message.channel.id]), client.players[message.channel.id].pop(0))
+            embedVar = disnake.Embed(title=f"Hangman", description=f"{client.leadWordPoints[message.channel.id]}", color=0x00ff00)
+            client.players[message.channel.id].insert(len(client.players[message.channel.id]), client.players[message.channel.id].pop(0))
+            embedVar.add_field(name="Next Player: ", value=f'<@{client.players[message.channel.id][0]}>', inline=False)
+            embedVar.add_field(name=f"Guessed Letters", value=f"{client.guessedLetters[message.channel.id]}")
+        else:
           embedVar = disnake.Embed(title=f"Hangman", description=f"{client.leadWordPoints[message.channel.id]}", color=0x00ff00)
+          client.players[message.channel.id].insert(len(client.players[message.channel.id]), client.players[message.channel.id].pop(0))
           embedVar.add_field(name="Next Player: ", value=f'<@{client.players[message.channel.id][0]}>', inline=False)
-          await client.currentEmbed[message.channel.id].edit(embed=embedVar)
+          embedVar.add_field(name=f"Guessed Letters", value=f"{client.guessedLetters[message.channel.id]}")
+        await message.delete()
+        await client.currentEmbed[message.channel.id].edit(embed=embedVar)
   
   except IndexError:
     print("Index out of range, probably empty still")
