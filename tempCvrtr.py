@@ -1,3 +1,3 @@
-from RandomWordGenerator import RandomWord
-rw = RandomWord(max_word_size=20,constant_word_size=False)
-print(rw.generate())
+from random_word import RandomWords
+rw = RandomWords()
+print(rw.get_random_word(minLength=5,hasDictionaryDef="true"))
