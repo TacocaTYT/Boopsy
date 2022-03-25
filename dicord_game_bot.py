@@ -68,7 +68,7 @@ async def startGame(ctx, gameID: int = 2):
     embedVar.add_field(name="Next Player: ", value=f"<@{client.players[ctx.channel.id][0]}>", inline=False)
   
   elif gameID == 2:
-    client.leadWord[ctx.channel.id] = str(rw.get_random_word(minLength=5)).lower()
+    client.leadWord[ctx.channel.id] = str(rw.get_random_word(minLength=5,hasDictionaryDef="true")).lower()
     print(client.leadWord[ctx.channel.id])
     client.leadWordPoints[ctx.channel.id] = ""
     client.guessedLetters[ctx.channel.id] = []
