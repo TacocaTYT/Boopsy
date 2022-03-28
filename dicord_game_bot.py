@@ -90,7 +90,15 @@ async def startGame(ctx, gameID: int = 2):
   description="List the available game IDs"
 )
 async def gameIDlist(ctx):
-  await ctx.send(f'```py\n{gameIDdict}```')
+  await ctx.send(f'test')
+
+
+@client.slash_command(
+  name="end_game",
+  description="End the game"
+)
+async def endGame(ctx):
+  pass
 
 
 @client.slash_command(
