@@ -57,9 +57,9 @@ async def on_ready():
   name="start_game",
   description="Start a game from the list."
 )
-async def startGame(ctx, gameID: int = 2):
-  client.channelGame[ctx.channel.id] = gameID
-  if gameID == 1:
+async def startGame(ctx, gameid: int = 1):
+  client.channelGame[ctx.channel.id] = gameid
+  if gameid == 1:
     client.leadWord[ctx.channel.id] = ""
     client.leadWordPoints[ctx.channel.id] = 0
     client.leadPlayer[ctx.channel.id] = "<@885311386207526932>"
@@ -67,7 +67,7 @@ async def startGame(ctx, gameID: int = 2):
     embedVar.add_field(name="Score to Beat:", value=client.leadWord[ctx.channel.id] + " worth " + str(client.leadWordPoints[ctx.channel.id]) + " points from " + str(client.leadPlayer[ctx.channel.id]), inline=False)
     embedVar.add_field(name="Next Player: ", value=f"<@{client.players[ctx.channel.id][0]}>", inline=False)
   
-  elif gameID == 2:
+  elif gameid == 2:
     client.leadWord[ctx.channel.id] = str(rw.get_random_word(minLength=5,hasDictionaryDef="true",excludePartOfSpeech="noun,pronoun,verb")).lower()
     print(client.leadWord[ctx.channel.id])
     client.leadWordPoints[ctx.channel.id] = ""
@@ -99,6 +99,7 @@ async def gameIDlist(ctx):
 )
 async def endGame(ctx):
   client.channelGame[ctx.channel.id] = 0
+  await ctx.send(f'Game Ended')
 
 
 @client.slash_command(
@@ -118,68 +119,69 @@ async def joinGame(ctx):
 
 @client.listen()
 async def on_message(message):
-  try:
-#Scrabble ripoff logic
-    if message.author != client.user and client.channelGame[message.channel.id] == 1:
-      if message.author.id == client.players[message.channel.id][0]:
-        if len(message.content) <= 45 and " " not in message.content:
-          client.remainingCharacters = len(message.content)
-          while client.remainingCharacters > 0:
-            for i in message.content:
-              for key in pointDict:
-                if i == key:
-                  client.points += pointDict[key]
-                  client.remainingCharacters -= 1
+  if message.channel.id in client.channelGame:
+    try:
+  #Scrabble ripoff logic
+      if message.author != client.user and client.channelGame[message.channel.id] == 1:
+        if message.author.id == client.players[message.channel.id][0]:
+          if len(message.content) <= 45 and " " not in message.content:
+            client.remainingCharacters = len(message.content)
+            while client.remainingCharacters > 0:
+              for i in message.content:
+                for key in pointDict:
+                  if i == key:
+                    client.points += pointDict[key]
+                    client.remainingCharacters -= 1
 
-          await message.delete()
-          #If highscore
-          if client.points > client.leadWordPoints[message.channel.id]:
-            embedVar = disnake.Embed(title=f"{message.author}'s turn!", description=f"{message.author}'s word was {message.content}, worth {client.points} points", color=0x00ff00)
-            embedVar.add_field(name="Score to Beat:", value=client.leadWord[message.channel.id] + " worth " + str(client.leadWordPoints[message.channel.id]) + " points from " + str(client.leadPlayer[message.channel.id]), inline=False)
-            client.players[message.channel.id].insert(len(client.players[message.channel.id]), client.players[message.channel.id].pop(0))
-            embedVar.add_field(name="Next Player: ", value=f'<@{client.players[message.channel.id][0]}>', inline=False)
-            client.leadPlayer[message.channel.id] = message.author
-            client.leadWord[message.channel.id] = message.content
-            client.leadWordPoints[message.channel.id] = client.points
-            await client.currentEmbed[message.channel.id].edit(embed=embedVar)
-          #If not highscore
-          else:
-            embedVar = disnake.Embed(title=f"{message.author}'s turn!", description=f"{message.author}'s word was {message.content}, worth {client.points} points", color=0x00ff00)
-            embedVar.add_field(name="Score to Beat:", value=client.leadWord[message.channel.id] + " worth " + str(client.leadWordPoints[message.channel.id]) + " points from " + str(client.leadPlayer[message.channel.id]), inline=False)
-            client.players[message.channel.id].insert(len(client.players[message.channel.id]), client.players[message.channel.id].pop(0))
-            embedVar.add_field(name="Next Player: ", value=f'<@{client.players[message.channel.id][0]}>', inline=False)
-            await client.currentEmbed[message.channel.id].edit(embed=embedVar)
-          client.points = 0
-    
-#Hangman game logic
-    if message.author != client.user and client.channelGame[message.channel.id] == 2:
-      if message.author.id == client.players[message.channel.id][0]:
-        if str(message.content).lower() == client.leadWord[message.channel.id]:
-          embedVar = disnake.Embed(title=f"{message.author} successfuly guessed the word, {client.leadWord[message.channel.id]}")
-          await client.currentEmbed[message.channel.id].edit(embed=embedVar)
-          client.players[message.channel.id].insert(len(client.players[message.channel.id]), client.players[message.channel.id].pop(0))
-          client.channelGame[message.channel.id] = 0
-        elif len(str(message.content)) == 1 and str(message.content).isalpha() and str(message.content).lower() not in client.guessedLetters[message.channel.id]:
-          client.leadWordPoints[message.channel.id] = ""
-          client.guessedLetters[message.channel.id] += str(message.content).lower()
-          for i in client.leadWord[message.channel.id]:
-            if i in client.guessedLetters[message.channel.id]:
-              client.leadWordPoints[message.channel.id] += f"{i}"
+            await message.delete()
+            #If highscore
+            if client.points > client.leadWordPoints[message.channel.id]:
+              embedVar = disnake.Embed(title=f"{message.author}'s turn!", description=f"{message.author}'s word was {message.content}, worth {client.points} points", color=0x00ff00)
+              embedVar.add_field(name="Score to Beat:", value=client.leadWord[message.channel.id] + " worth " + str(client.leadWordPoints[message.channel.id]) + " points from " + str(client.leadPlayer[message.channel.id]), inline=False)
+              client.players[message.channel.id].insert(len(client.players[message.channel.id]), client.players[message.channel.id].pop(0))
+              embedVar.add_field(name="Next Player: ", value=f'<@{client.players[message.channel.id][0]}>', inline=False)
+              client.leadPlayer[message.channel.id] = message.author
+              client.leadWord[message.channel.id] = message.content
+              client.leadWordPoints[message.channel.id] = client.points
+              await client.currentEmbed[message.channel.id].edit(embed=embedVar)
+            #If not highscore
             else:
-              client.leadWordPoints[message.channel.id] += "[]"
+              embedVar = disnake.Embed(title=f"{message.author}'s turn!", description=f"{message.author}'s word was {message.content}, worth {client.points} points", color=0x00ff00)
+              embedVar.add_field(name="Score to Beat:", value=client.leadWord[message.channel.id] + " worth " + str(client.leadWordPoints[message.channel.id]) + " points from " + str(client.leadPlayer[message.channel.id]), inline=False)
+              client.players[message.channel.id].insert(len(client.players[message.channel.id]), client.players[message.channel.id].pop(0))
+              embedVar.add_field(name="Next Player: ", value=f'<@{client.players[message.channel.id][0]}>', inline=False)
+              await client.currentEmbed[message.channel.id].edit(embed=embedVar)
+            client.points = 0
+      
+  #Hangman game logic
+      if message.author != client.user and client.channelGame[message.channel.id] == 2:
+        if message.author.id == client.players[message.channel.id][0]:
+          if str(message.content).lower() == client.leadWord[message.channel.id]:
+            embedVar = disnake.Embed(title=f"{message.author} successfuly guessed the word, {client.leadWord[message.channel.id]}")
+            await client.currentEmbed[message.channel.id].edit(embed=embedVar)
+            client.players[message.channel.id].insert(len(client.players[message.channel.id]), client.players[message.channel.id].pop(0))
+            client.channelGame[message.channel.id] = 0
+          elif len(str(message.content)) == 1 and str(message.content).isalpha() and str(message.content).lower() not in client.guessedLetters[message.channel.id]:
+            client.leadWordPoints[message.channel.id] = ""
+            client.guessedLetters[message.channel.id] += str(message.content).lower()
+            for i in client.leadWord[message.channel.id]:
+              if i in client.guessedLetters[message.channel.id]:
+                client.leadWordPoints[message.channel.id] += f"{i}"
+              else:
+                client.leadWordPoints[message.channel.id] += "[]"
+              embedVar = disnake.Embed(title=f"Hangman", description=f"{client.leadWordPoints[message.channel.id]}", color=0x00ff00)
+              client.players[message.channel.id].insert(len(client.players[message.channel.id]), client.players[message.channel.id].pop(0))
+              embedVar.add_field(name="Next Player: ", value=f'<@{client.players[message.channel.id][0]}>', inline=False)
+              embedVar.add_field(name=f"Guessed Letters", value=f"{client.guessedLetters[message.channel.id]}")
+          else:
             embedVar = disnake.Embed(title=f"Hangman", description=f"{client.leadWordPoints[message.channel.id]}", color=0x00ff00)
             client.players[message.channel.id].insert(len(client.players[message.channel.id]), client.players[message.channel.id].pop(0))
             embedVar.add_field(name="Next Player: ", value=f'<@{client.players[message.channel.id][0]}>', inline=False)
             embedVar.add_field(name=f"Guessed Letters", value=f"{client.guessedLetters[message.channel.id]}")
-        else:
-          embedVar = disnake.Embed(title=f"Hangman", description=f"{client.leadWordPoints[message.channel.id]}", color=0x00ff00)
-          client.players[message.channel.id].insert(len(client.players[message.channel.id]), client.players[message.channel.id].pop(0))
-          embedVar.add_field(name="Next Player: ", value=f'<@{client.players[message.channel.id][0]}>', inline=False)
-          embedVar.add_field(name=f"Guessed Letters", value=f"{client.guessedLetters[message.channel.id]}")
-        await message.delete()
-        await client.currentEmbed[message.channel.id].edit(embed=embedVar)
-  
-  except IndexError:
-    print("Index out of range, probably empty still")
+          await message.delete()
+          await client.currentEmbed[message.channel.id].edit(embed=embedVar)
+    
+    except IndexError:
+      print("Index out of range, probably empty still")
 
 client.run(my_token)
