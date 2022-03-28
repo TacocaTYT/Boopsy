@@ -59,30 +59,35 @@ async def on_ready():
 )
 async def startGame(ctx, gameid: int = 1):
   client.channelGame[ctx.channel.id] = gameid
-  if gameid == 1:
-    client.leadWord[ctx.channel.id] = ""
-    client.leadWordPoints[ctx.channel.id] = 0
-    client.leadPlayer[ctx.channel.id] = "<@885311386207526932>"
-    embedVar = disnake.Embed(title=f"The game has begun!", description="", color=0x00ff00)
-    embedVar.add_field(name="Score to Beat:", value=client.leadWord[ctx.channel.id] + " worth " + str(client.leadWordPoints[ctx.channel.id]) + " points from " + str(client.leadPlayer[ctx.channel.id]), inline=False)
-    embedVar.add_field(name="Next Player: ", value=f"<@{client.players[ctx.channel.id][0]}>", inline=False)
-  
-  elif gameid == 2:
-    client.leadWord[ctx.channel.id] = str(rw.get_random_word(minLength=5,hasDictionaryDef="true",excludePartOfSpeech="noun,pronoun,verb")).lower()
-    print(client.leadWord[ctx.channel.id])
-    client.leadWordPoints[ctx.channel.id] = ""
-    client.guessedLetters[ctx.channel.id] = ["-"]
-    for i in client.leadWord[ctx.channel.id]:
-      if i in client.guessedLetters[ctx.channel.id]:
-        client.leadWordPoints[ctx.channel.id] += f"{i}"
-      else:
-        client.leadWordPoints[ctx.channel.id] += "[]"
-    embedVar = disnake.Embed(title=f"Hangman", description=f"{client.leadWordPoints[ctx.channel.id]}", color=0x00ff00)
-    embedVar.add_field(name="Next Player: ", value=f'<@{client.players[ctx.channel.id][0]}>', inline=False)
-  
-  await ctx.send(embed=embedVar)
-  client.currentEmbed[ctx.channel.id] = await ctx.original_message()
-  client.currentGameChannel = ctx.channel.id
+  try:
+    if gameid == 1:
+      client.leadWord[ctx.channel.id] = ""
+      client.leadWordPoints[ctx.channel.id] = 0
+      client.leadPlayer[ctx.channel.id] = "<@885311386207526932>"
+      embedVar = disnake.Embed(title=f"The game has begun!", description="", color=0x00ff00)
+      embedVar.add_field(name="Score to Beat:", value=client.leadWord[ctx.channel.id] + " worth " + str(client.leadWordPoints[ctx.channel.id]) + " points from " + str(client.leadPlayer[ctx.channel.id]), inline=False)
+      embedVar.add_field(name="Next Player: ", value=f"<@{client.players[ctx.channel.id][0]}>", inline=False)
+    
+    elif gameid == 2:
+      client.leadWord[ctx.channel.id] = str(rw.get_random_word(minLength=5,hasDictionaryDef="true",excludePartOfSpeech="noun,pronoun,verb")).lower()
+      print(client.leadWord[ctx.channel.id])
+      client.leadWordPoints[ctx.channel.id] = ""
+      client.guessedLetters[ctx.channel.id] = ["-"]
+      for i in client.leadWord[ctx.channel.id]:
+        if i in client.guessedLetters[ctx.channel.id]:
+          client.leadWordPoints[ctx.channel.id] += f"{i}"
+        else:
+          client.leadWordPoints[ctx.channel.id] += "[]"
+      embedVar = disnake.Embed(title=f"Hangman", description=f"{client.leadWordPoints[ctx.channel.id]}", color=0x00ff00)
+      embedVar.add_field(name="Next Player: ", value=f'<@{client.players[ctx.channel.id][0]}>', inline=False)
+      embedVar.add_field(name=f"Guessed Letters", value=f"{client.guessedLetters[ctx.channel.id]}")
+    
+    await ctx.send(embed=embedVar)
+    client.currentEmbed[ctx.channel.id] = await ctx.original_message()
+    client.currentGameChannel = ctx.channel.id
+  except:
+    await ctx.send("Can't start a game with 0 players! Use ``/join_game``")
+    client.channelGame[ctx.channel.id] = 0
 
 
 @client.slash_command(
@@ -99,6 +104,7 @@ async def gameIDlist(ctx):
 )
 async def endGame(ctx):
   client.channelGame[ctx.channel.id] = 0
+  client.players[ctx.channel.id] = []
   await ctx.send(f'Game Ended')
 
 
@@ -107,7 +113,6 @@ async def endGame(ctx):
   description="Join the game being played in this channel"
 )
 async def joinGame(ctx):
-  #await ctx.message.delete()
   if ctx.channel.id not in client.players:
     client.players[ctx.channel.id] = []
   if ctx.author.id in client.players[ctx.channel.id]:
@@ -161,6 +166,7 @@ async def on_message(message):
             await client.currentEmbed[message.channel.id].edit(embed=embedVar)
             client.players[message.channel.id].insert(len(client.players[message.channel.id]), client.players[message.channel.id].pop(0))
             client.channelGame[message.channel.id] = 0
+            client.players[message.channel.id] = []
           elif len(str(message.content)) == 1 and str(message.content).isalpha() and str(message.content).lower() not in client.guessedLetters[message.channel.id]:
             client.leadWordPoints[message.channel.id] = ""
             client.guessedLetters[message.channel.id] += str(message.content).lower()
