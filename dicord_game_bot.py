@@ -71,7 +71,7 @@ async def startGame(ctx, gameID: int = 2):
     client.leadWord[ctx.channel.id] = str(rw.get_random_word(minLength=5,hasDictionaryDef="true")).lower()
     print(client.leadWord[ctx.channel.id])
     client.leadWordPoints[ctx.channel.id] = ""
-    client.guessedLetters[ctx.channel.id] = []
+    client.guessedLetters[ctx.channel.id] = ["-"]
     for i in client.leadWord[ctx.channel.id]:
       if i in client.guessedLetters[ctx.channel.id]:
         client.leadWordPoints[ctx.channel.id] += f"{i}"
@@ -91,6 +91,14 @@ async def startGame(ctx, gameID: int = 2):
 )
 async def gameIDlist(ctx):
   await ctx.send(f'```py\n{gameIDdict}```')
+
+
+@client.slash_command(
+  name="end_game",
+  description="End the game"
+)
+async def endGame(ctx):
+  pass
 
 
 @client.slash_command(
