@@ -68,10 +68,10 @@ async def startGame(ctx, gameID: int = 2):
     embedVar.add_field(name="Next Player: ", value=f"<@{client.players[ctx.channel.id][0]}>", inline=False)
   
   elif gameID == 2:
-    client.leadWord[ctx.channel.id] = str(rw.get_random_word(minLength=5,hasDictionaryDef="true")).lower()
+    client.leadWord[ctx.channel.id] = str(rw.get_random_word(minLength=5,hasDictionaryDef="true",excludePartOfSpeech="noun,pronoun,verb")).lower()
     print(client.leadWord[ctx.channel.id])
     client.leadWordPoints[ctx.channel.id] = ""
-    client.guessedLetters[ctx.channel.id] = []
+    client.guessedLetters[ctx.channel.id] = ["-"]
     for i in client.leadWord[ctx.channel.id]:
       if i in client.guessedLetters[ctx.channel.id]:
         client.leadWordPoints[ctx.channel.id] += f"{i}"
@@ -91,6 +91,14 @@ async def startGame(ctx, gameID: int = 2):
 )
 async def gameIDlist(ctx):
   await ctx.send(f'```py\n{gameIDdict}```')
+
+
+@client.slash_command(
+  name="end_game",
+  description="End the current game"
+)
+async def endGame(ctx):
+  client.channelGame[ctx.channel.id] = 0
 
 
 @client.slash_command(
@@ -149,8 +157,9 @@ async def on_message(message):
         if str(message.content).lower() == client.leadWord[message.channel.id]:
           embedVar = disnake.Embed(title=f"{message.author} successfuly guessed the word, {client.leadWord[message.channel.id]}")
           await client.currentEmbed[message.channel.id].edit(embed=embedVar)
+          client.players[message.channel.id].insert(len(client.players[message.channel.id]), client.players[message.channel.id].pop(0))
           client.channelGame[message.channel.id] = 0
-        elif len(str(message.content)) == 1 and str(message.content).isalpha() and str(message.content) not in client.guessedLetters[message.channel.id]:
+        elif len(str(message.content)) == 1 and str(message.content).isalpha() and str(message.content).lower() not in client.guessedLetters[message.channel.id]:
           client.leadWordPoints[message.channel.id] = ""
           client.guessedLetters[message.channel.id] += str(message.content).lower()
           for i in client.leadWord[message.channel.id]:
