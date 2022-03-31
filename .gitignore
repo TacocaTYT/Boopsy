@@ -131,3 +131,7 @@ dmypy.json
 /Game Stuff
 .vscode
 my_token.py
+tempCvrtr.py
+brickProblem.py
+calculator.py
+floor.py
