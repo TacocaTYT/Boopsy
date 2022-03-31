@@ -62,7 +62,7 @@ async def on_ready():
 )
 async def initutil(ctx, user: disnake.Member = None):
   user = user or ctx.author
-  if disnake.utils.get(ctx.author.roles,name="Gamemaster") or ctx.author.id is ctx.guild.owner_id:
+  if disnake.utils.get(ctx.author.roles,name="Gamemaster") is not None or ctx.author.id == ctx.guild.owner_id:
     role = disnake.utils.get(ctx.guild.roles, name="Gamemaster")
     if role is None:
       role = await ctx.guild.create_role(name="Gamemaster",reason="init__util_gm/created_role")
