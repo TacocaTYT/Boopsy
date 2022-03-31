@@ -67,6 +67,7 @@ async def initutil(ctx, user: disnake.Member = None):
     if role is None:
       role = await ctx.guild.create_role(name="Gamemaster",reason="init__util_gm/created_role")
     await user.add_roles(role,reason="init__util_gm/assigned_role")
+    await ctx.send(content=f"<@{user.id}> has been given the {role} role.", delete_after=5.0)
 
 
 @client.slash_command(
@@ -75,35 +76,38 @@ async def initutil(ctx, user: disnake.Member = None):
 )
 async def startGame(ctx, gameid: int = 1):
   client.channelGame[ctx.channel.id] = gameid
-  try:
-    if gameid == 1:
-      client.leadWord[ctx.channel.id] = ""
-      client.leadWordPoints[ctx.channel.id] = 0
-      client.leadPlayer[ctx.channel.id] = "<@885311386207526932>"
-      embedVar = disnake.Embed(title=f"The game has begun!", description="", color=0x00ff00)
-      embedVar.add_field(name="Score to Beat:", value=client.leadWord[ctx.channel.id] + " worth " + str(client.leadWordPoints[ctx.channel.id]) + " points from " + str(client.leadPlayer[ctx.channel.id]), inline=False)
-      embedVar.add_field(name="Next Player: ", value=f"<@{client.players[ctx.channel.id][0]}>", inline=False)
-    
-    elif gameid == 2:
-      client.leadWord[ctx.channel.id] = str(rw.get_random_word(minLength=5,hasDictionaryDef="true",excludePartOfSpeech="noun,pronoun,verb")).lower()
-      print(client.leadWord[ctx.channel.id])
-      client.leadWordPoints[ctx.channel.id] = ""
-      client.guessedLetters[ctx.channel.id] = ["-"]
-      for i in client.leadWord[ctx.channel.id]:
-        if i in client.guessedLetters[ctx.channel.id]:
-          client.leadWordPoints[ctx.channel.id] += f"{i}"
-        else:
-          client.leadWordPoints[ctx.channel.id] += "[]"
-      embedVar = disnake.Embed(title=f"Hangman", description=f"{client.leadWordPoints[ctx.channel.id]}", color=0x00ff00)
-      embedVar.add_field(name="Next Player: ", value=f'<@{client.players[ctx.channel.id][0]}>', inline=False)
-      embedVar.add_field(name=f"Guessed Letters", value=f"{client.guessedLetters[ctx.channel.id]}")
-    
-    await ctx.send(embed=embedVar)
-    client.currentEmbed[ctx.channel.id] = await ctx.original_message()
-    client.currentGameChannel = ctx.channel.id
-  except:
-    await ctx.send("Can't start a game with 0 players! Use ``/join_game``")
-    client.channelGame[ctx.channel.id] = 0
+  if disnake.utils.get(ctx.author.roles,name="Gamemaster") is not None:
+    try:
+      if gameid == 1:
+        client.leadWord[ctx.channel.id] = ""
+        client.leadWordPoints[ctx.channel.id] = 0
+        client.leadPlayer[ctx.channel.id] = "<@885311386207526932>"
+        embedVar = disnake.Embed(title=f"The game has begun!", description="", color=0x00ff00)
+        embedVar.add_field(name="Score to Beat:", value=client.leadWord[ctx.channel.id] + " worth " + str(client.leadWordPoints[ctx.channel.id]) + " points from " + str(client.leadPlayer[ctx.channel.id]), inline=False)
+        embedVar.add_field(name="Next Player: ", value=f"<@{client.players[ctx.channel.id][0]}>", inline=False)
+      
+      elif gameid == 2:
+        client.leadWord[ctx.channel.id] = str(rw.get_random_word(minLength=5,hasDictionaryDef="true",excludePartOfSpeech="noun,pronoun,verb")).lower()
+        print(client.leadWord[ctx.channel.id])
+        client.leadWordPoints[ctx.channel.id] = ""
+        client.guessedLetters[ctx.channel.id] = ["-"]
+        for i in client.leadWord[ctx.channel.id]:
+          if i in client.guessedLetters[ctx.channel.id]:
+            client.leadWordPoints[ctx.channel.id] += f"{i}"
+          else:
+            client.leadWordPoints[ctx.channel.id] += "[]"
+        embedVar = disnake.Embed(title=f"Hangman", description=f"{client.leadWordPoints[ctx.channel.id]}", color=0x00ff00)
+        embedVar.add_field(name="Next Player: ", value=f'<@{client.players[ctx.channel.id][0]}>', inline=False)
+        embedVar.add_field(name=f"Guessed Letters", value=f"{client.guessedLetters[ctx.channel.id]}")
+      
+      await ctx.send(embed=embedVar)
+      client.currentEmbed[ctx.channel.id] = await ctx.original_message()
+      client.currentGameChannel = ctx.channel.id
+    except:
+      await ctx.send("Can't start a game with 0 players! Use ``/join_game``", ephemeral=True)
+      client.channelGame[ctx.channel.id] = 0
+  else:
+    await ctx.send(content="You are not a gamemaster", ephemeral=True)
 
 
 @client.slash_command(
@@ -111,7 +115,7 @@ async def startGame(ctx, gameid: int = 1):
   description="List the available game IDs"
 )
 async def gameIDlist(ctx):
-  await ctx.send(f'```py{gameIDdict}```')
+  await ctx.send(content=f'```py{gameIDdict}```', delete_after=5)
 
 
 @client.slash_command(
@@ -119,9 +123,15 @@ async def gameIDlist(ctx):
   description="End the current game"
 )
 async def endGame(ctx):
-  client.channelGame[ctx.channel.id] = 0
-  client.players[ctx.channel.id] = []
-  await ctx.send(f'Game Ended')
+  if disnake.utils.get(ctx.author.roles,name="Gamemaster") is not None:
+    try:
+      client.channelGame[ctx.channel.id] = 0
+      client.players[ctx.channel.id] = []
+      await ctx.send(f'Game Ended')
+    except:
+      await ctx.send(content="An unknown error occured", ephemeral=True)
+  else:
+    await ctx.send(content="You are not a gamemaster", ephemeral=True)
 
 
 @client.slash_command(
@@ -132,9 +142,9 @@ async def joinGame(ctx):
   if ctx.channel.id not in client.players:
     client.players[ctx.channel.id] = []
   if ctx.author.id in client.players[ctx.channel.id]:
-    await ctx.send(f'{ctx.author}, you are already in the game, no need to join twice.')
+    await ctx.send(f'<@{ctx.author.id}>, you are already in the game, no need to join twice.', ephemeral=True)
   else:
-    await ctx.send(f'<@{ctx.author.id}> has joined the round!')
+    await ctx.send(f'<@{ctx.author.id}> has joined the round!', delete_after=3.0)
     client.players[ctx.channel.id].append(ctx.author.id)
 
 
