@@ -50,9 +50,25 @@ client.leadPlayer = {}
 client.currentEmbed = {}
 client.guessedLetters = {}
 
+
 @client.event
 async def on_ready():
   print(f'Ready to rumble.')
+
+
+@client.slash_command(
+  name="init__util_gm",
+  description="Initialization utility that also assigns the gamemaster role to the indicated user"
+)
+async def initutil(ctx, user: disnake.Member = None):
+  user = user or ctx.author
+  if disnake.utils.get(ctx.author.roles,name="Gamemaster") or ctx.author.id is ctx.guild.owner_id:
+    role = disnake.utils.get(ctx.guild.roles, name="Gamemaster")
+    if role is None:
+      role = await ctx.guild.create_role(name="Gamemaster",reason="init__util_gm/created_role")
+    await user.add_roles(role,reason="init__util_gm/assigned_role")
+
+
 @client.slash_command(
   name="start_game",
   description="Start a game from the list."
