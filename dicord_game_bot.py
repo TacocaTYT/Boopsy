@@ -187,10 +187,10 @@ async def on_message(message):
   #Hangman game logic
       if message.author != client.user and client.channelGame[message.channel.id] == 2:
         if message.author.id == client.players[message.channel.id][0]:
+          client.players[message.channel.id].insert(len(client.players[message.channel.id]), client.players[message.channel.id].pop(0))
           if str(message.content).lower() == client.leadWord[message.channel.id]:
             embedVar = disnake.Embed(title=f"{message.author} successfuly guessed the word, {client.leadWord[message.channel.id]}")
             await client.currentEmbed[message.channel.id].edit(embed=embedVar)
-            client.players[message.channel.id].insert(len(client.players[message.channel.id]), client.players[message.channel.id].pop(0))
             client.channelGame[message.channel.id] = 0
             client.players[message.channel.id] = []
           elif len(str(message.content)) == 1 and str(message.content).isalpha() and str(message.content).lower() not in client.guessedLetters[message.channel.id]:
@@ -202,12 +202,10 @@ async def on_message(message):
               else:
                 client.leadWordPoints[message.channel.id] += "[]"
               embedVar = disnake.Embed(title=f"Hangman", description=f"{client.leadWordPoints[message.channel.id]}", color=0x00ff00)
-              client.players[message.channel.id].insert(len(client.players[message.channel.id]), client.players[message.channel.id].pop(0))
               embedVar.add_field(name="Next Player: ", value=f'<@{client.players[message.channel.id][0]}>', inline=False)
               embedVar.add_field(name=f"Guessed Letters", value=f"{client.guessedLetters[message.channel.id]}")
           else:
             embedVar = disnake.Embed(title=f"Hangman", description=f"{client.leadWordPoints[message.channel.id]}", color=0x00ff00)
-            client.players[message.channel.id].insert(len(client.players[message.channel.id]), client.players[message.channel.id].pop(0))
             embedVar.add_field(name="Next Player: ", value=f'<@{client.players[message.channel.id][0]}>', inline=False)
             embedVar.add_field(name=f"Guessed Letters", value=f"{client.guessedLetters[message.channel.id]}")
           await message.delete()
