@@ -86,6 +86,8 @@ async def startGame(ctx, gameid: int = 1):
     
     elif gameid == 2:
       client.leadWord[ctx.channel.id] = str(rw.get_random_word(minLength=5,hasDictionaryDef="true",excludePartOfSpeech="noun,pronoun,verb")).lower()
+      while " " in client.leadWord[ctx.channel.id] or "-" in client.leadWord[ctx.channel.id]:
+        client.leadWord[ctx.channel.id] = str(rw.get_random_word(minLength=5,hasDictionaryDef="true",excludePartOfSpeech="noun,pronoun,verb")).lower()
       print(client.leadWord[ctx.channel.id])
       client.leadWordPoints[ctx.channel.id] = ""
       client.guessedLetters[ctx.channel.id] = ["-"]
