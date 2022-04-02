@@ -6,8 +6,8 @@ rw = RandomWords()
 import logging
 import asyncio
 gameIDdict = {
-  "shitty scrabble" : 1,
-  "hangman" : 2
+  1:"shitty scrabble",
+  2:"hangman"
 }
 pointDict = {
   "a" : 1,
@@ -110,7 +110,7 @@ async def startGame(ctx, gameid: int = 1):
       while client.players[ctx.channel.id]:
         try:
           isPlayer = lambda message : message.author.id == client.players[message.channel.id][0]
-          message = await client.wait_for("message", check = isPlayer, timeout = 15)
+          message = await client.wait_for("message", check = isPlayer, timeout = 5)
           if message.channel.id in client.channelGame:
             if client.channelGame[message.channel.id] == 1 and len(message.content) <= 45 and " " not in message.content: #Bad Scrabble
               client.remainingCharacters = len(message.content)
@@ -166,14 +166,15 @@ async def startGame(ctx, gameid: int = 1):
                   await message.delete()
                   await client.currentEmbed[message.channel.id].edit(embed=embedVar)
         except asyncio.TimeoutError:
-          client.players[message.channel.id].insert(len(client.players[message.channel.id]), client.players[message.channel.id].pop(0))
-          await message.send(f"<@{message.author.id}> has been removed from the Queue", delete_after = 5)
-      if client.channelGame[ctx.channel.id] != 0:
-        embedVar = disnake.Embed(title=f"This game of {gameIDdict(client.channelGame[ctx.channel.id])}")
-        await client.currentEmbed[message.channel.id].edit(embed=embedVar)
+          await ctx.send(f"<@{client.players[ctx.channel.id][0]}> has been removed from the Queue", delete_after = 5)
+          client.players[ctx.channel.id].pop(0)
+      if client.channelGame[ctx.channel.id]:
+        embedVar = disnake.Embed(title=f"This game of {gameIDdict[client.channelGame[ctx.channel.id]]} has ended.")
+        await client.currentEmbed[ctx.channel.id].edit(embed=embedVar)
         client.channelGame[ctx.channel.id] = 0
 
-    except:
+    except Exception as e:
+      print(e)
       await ctx.send("Can't start a game with 0 players! Use ``/join_game``", ephemeral=True)
       client.channelGame[ctx.channel.id] = 0
   else:
