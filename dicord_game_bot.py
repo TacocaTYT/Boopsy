@@ -74,10 +74,10 @@ async def initutil(ctx, user: disnake.Member = None):
 
 
 @client.slash_command(
-  name="init__util_gm",
-  description="Initialization utility that also assigns the gamemaster role to the indicated user"
+  name="hangdef",
+  description="Gets the definition of the active word."
 )
-async def initutil(ctx, user: disnake.Member = None):
+async def hangdef(ctx, user: disnake.Member = None):
   user = user or ctx.author
   if disnake.utils.get(ctx.author.roles,name="Gamemaster") is not None or ctx.author.id == ctx.guild.owner_id and client.channelGame[ctx.channel.id] == 2:
     await ctx.send(dictionary.meaning(client.leadWord[ctx.channel.id]))
