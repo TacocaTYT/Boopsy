@@ -124,7 +124,7 @@ async def startGame(ctx, gameid: int = 1):
       while client.players[ctx.channel.id]:
         try:
           isPlayer = lambda message : message.author.id == client.players[message.channel.id][0]
-          message = await client.wait_for("message", check = isPlayer, timeout = 5)
+          message = await client.wait_for("message", check = isPlayer, timeout = 300)
           if message.channel.id in client.channelGame:
             if client.channelGame[message.channel.id] == 1 and len(message.content) <= 45 and " " not in message.content: #Bad Scrabble
               client.remainingCharacters = len(message.content)
@@ -168,8 +168,8 @@ async def startGame(ctx, gameid: int = 1):
                       for i in client.leadWord[message.channel.id]:
                           if i in client.guessedLetters[message.channel.id]:
                               client.leadWordPoints[message.channel.id] += f"{i}"
-                      else:
-                          client.leadWordPoints[message.channel.id] += "[]"
+                          else:
+                              client.leadWordPoints[message.channel.id] += "[]"
                       embedVar = disnake.Embed(title=f"Hangman", description=f"{client.leadWordPoints[message.channel.id]}", color=0x00ff00)
                       embedVar.add_field(name="Next Player: ", value=f'<@{client.players[message.channel.id][0]}>', inline=False)
                       embedVar.add_field(name=f"Guessed Letters", value=f"{client.guessedLetters[message.channel.id]}")
