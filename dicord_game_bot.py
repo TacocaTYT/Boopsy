@@ -43,6 +43,7 @@ pointDict = {
 
 client = commands.Bot(command_prefix="b|", test_guilds=[951923779859271711], intents=disnake.Intents.default())
 client.players = {}
+client.firstPlayer = {}
 client.nextPlayer = "<@885311386207526932>"
 client.channelGame = {}
 client.remainingCharacters = 0
@@ -102,6 +103,7 @@ async def startGame(ctx, gameid: int = 1):
         embedVar.add_field(name="Next Player: ", value=f"<@{client.players[ctx.channel.id][0]}>", inline=False)
       
       elif gameid == 2:
+        client.firstPlayer[ctx.channel.id] = [client.players[ctx.channel.id][0]]
         client.leadWord[ctx.channel.id] = str(rw.get_random_word(minLength=5,hasDictionaryDef="true",excludePartOfSpeech="noun,pronoun,verb")).lower()
         while " " in client.leadWord[ctx.channel.id] or "_" in client.leadWord[ctx.channel.id]:
           client.leadWord[ctx.channel.id] = str(rw.get_random_word(minLength=5,hasDictionaryDef="true",excludePartOfSpeech="noun,pronoun,verb")).lower()
@@ -121,7 +123,7 @@ async def startGame(ctx, gameid: int = 1):
       client.currentEmbed[ctx.channel.id] = await ctx.original_message()
       client.currentGameChannel = ctx.channel.id
 
-      while client.players[ctx.channel.id]:
+      while len(client.players[ctx.channel.id]) > 0 and client.players[ctx.channel.id]:
         try:
           isPlayer = lambda message : message.author.id == client.players[message.channel.id][0]
           message = await client.wait_for("message", check = isPlayer, timeout = 300)
@@ -179,6 +181,11 @@ async def startGame(ctx, gameid: int = 1):
                       embedVar.add_field(name=f"Guessed Letters", value=f"{client.guessedLetters[message.channel.id]}")
                   await message.delete()
                   await client.currentEmbed[message.channel.id].edit(embed=embedVar)
+                  if len(client.firstPlayer[ctx.channel.id]) < 2:
+                    client.firstPlayer[ctx.channel.id].append("x")
+                  elif len(client.firstPlayer[ctx.channel.id]) > 1 and client.firstPlayer[ctx.channel.id][0] is client.players[ctx.channel.id][0]:
+                    await ctx.send(dictionary.meaning(client.leadWord[ctx.channel.id]))
+                    client.firstPlayer[ctx.channel.id] = []
         except asyncio.TimeoutError:
           await ctx.send(f"<@{client.players[ctx.channel.id][0]}> has been removed from the Queue", delete_after = 5)
           client.players[ctx.channel.id].pop(0)
