@@ -1,12 +1,22 @@
 import disnake
 from disnake.ext import commands
-from my_token import my_token
 from random_word import RandomWords
 rw = RandomWords()
 from PyDictionary import PyDictionary
 dictionary = PyDictionary()
 import logging
 import asyncio
+
+#------[COMMAND LINE ARGUMENT SETUP]------
+import sys
+import argparse
+parser = argparse.ArgumentParser(description="A Discord Bot designed made by Katte.")
+parser.add_argument("--token", "-t", help="Supply a token for a bot account to connect under.", default="", type=str)
+args = parser.parse_args()
+token = args.token
+if token == "": sys.exit("No Token, Cannot Connect")
+#-----------------------------------------
+
 gameIDdict = {
   1:"shitty scrabble",
   2:"hangman"
@@ -239,4 +249,4 @@ async def joinGame(ctx):
     await ctx.send(f'<@{ctx.author.id}> has joined the round!', delete_after=3.0)
     client.players[ctx.channel.id].append(ctx.author.id)
 
-client.run(my_token)
+client.run(token)
